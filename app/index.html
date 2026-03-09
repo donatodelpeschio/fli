@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Freelance Invoice - Generatore Ricevute Prestazione Occasionale</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>💼 Freelance Invoice</h1>
+            <p>Generatore professionale di ricevute per prestazioni occasionali</p>
+        </header>
+
+        <div class="main-grid">
+            <!-- Form Section -->
+            <div class="card">
+                <div class="card-header">
+                    <h2><span class="icon">📝</span> Dati Ricevuta</h2>
+                </div>
+
+                <form id="receiptForm">
+                    <!-- Calcolo Type Toggle -->
+                    <div class="form-group">
+                        <label>Modalità di calcolo</label>
+                        <div class="toggle-group">
+                            <button type="button" class="toggle-btn active" data-mode="lordo">Importo Lordo</button>
+                            <button type="button" class="toggle-btn" data-mode="netto">Importo Netto</button>
+                        </div>
+                    </div>
+
+                    <!-- Amount Input -->
+                    <div class="form-group">
+                        <label id="amountLabel">Importo Lordo (€)</label>
+                        <input type="number" id="amount" step="0.01" min="0" required placeholder="es. 1000.00">
+                    </div>
+
+                    <!-- Amount Display -->
+                    <div class="amount-display">
+                        <div class="amount-row">
+                            <span class="amount-label">Importo Lordo</span>
+                            <span class="amount-value" id="displayLordo">€ 0,00</span>
+                        </div>
+                        <div class="amount-row">
+                            <span class="amount-label">Ritenuta d'Acconto (20%)</span>
+                            <span class="amount-value" id="displayRitenuta">€ 0,00</span>
+                        </div>
+                        <div class="amount-row">
+                            <span class="amount-label">Netto a Pagare</span>
+                            <span class="amount-value" id="displayNetto">€ 0,00</span>
+                        </div>
+                    </div>
+
+                    <!-- Stamp Tax Alert -->
+                    <div class="stamp-alert" id="stampAlert" style="display: none;">
+                        <div class="stamp-alert-icon">⚠️</div>
+                        <div class="stamp-alert-content">
+                            <strong>Marca da bollo richiesta</strong>
+                            <p>L'importo supera €77,47: è necessaria una marca da bollo da €2,00.</p>
+                            <p><a href="https://www.agenziaentrate.gov.it/portale/web/guest/schede/pagamenti/imposta-di-bollo/cos-e-bollo" target="_blank">ℹ️ Info marca da bollo →</a></p>
+                        </div>
+                    </div>
+
+                    <!-- Receipt Details -->
+                    <div class="form-group">
+                        <label>Numero Ricevuta</label>
+                        <input type="text" id="receiptNumber" required placeholder="es. 001/2026">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Data Prestazione</label>
+                        <input type="date" id="workDate" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Ore di Lavoro (opzionale)</label>
+                        <input type="number" id="hours" step="0.5" min="0" placeholder="es. 8">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Descrizione Prestazione</label>
+                        <textarea id="description" required placeholder="es. Consulenza informatica, sviluppo software, formazione..."></textarea>
+                    </div>
+
+                    <!-- Mittente (Chi emette la ricevuta) -->
+                    <div class="card-header" style="margin-top: 2rem;">
+                        <h2><span class="icon">👤</span> Prestatore (Chi emette)</h2>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Nome e Cognome / Ragione Sociale</label>
+                        <input type="text" id="senderName" required placeholder="Mario Rossi">
+                    </div>
+
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label>Codice Fiscale</label>
+                            <input type="text" id="senderCF" required placeholder="RSSMRA80A01H501X">
+                        </div>
+                        <div class="form-group">
+                            <label>P.IVA (opzionale)</label>
+                            <input type="text" id="senderPIVA" placeholder="01234567890">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Indirizzo</label>
+                        <input type="text" id="senderAddress" required placeholder="Via Roma 1, 00100 Roma">
+                    </div>
+
+                    <!-- Destinatario (Chi riceve) -->
+                    <div class="card-header" style="margin-top: 2rem;">
+                        <h2><span class="icon">🏢</span> Cliente (Chi riceve)</h2>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Nome e Cognome / Ragione Sociale</label>
+                        <input type="text" id="recipientName" required placeholder="Azienda SRL">
+                    </div>
+
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label>Codice Fiscale</label>
+                            <input type="text" id="recipientCF" placeholder="01234567890">
+                        </div>
+                        <div class="form-group">
+                            <label>P.IVA</label>
+                            <input type="text" id="recipientPIVA" required placeholder="01234567890">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Indirizzo</label>
+                        <input type="text" id="recipientAddress" required placeholder="Via Milano 10, 20100 Milano">
+                    </div>
+
+                    <!-- Payment Method -->
+                    <div class="card-header" style="margin-top: 2rem;">
+                        <h2><span class="icon">💳</span> Metodo di Pagamento</h2>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Metodo di pagamento</label>
+                        <select id="paymentMethod" required>
+                            <option value="">Seleziona...</option>
+                            <option value="bonifico">Bonifico Bancario</option>
+                            <option value="contanti">Contanti</option>
+                            <option value="assegno">Assegno</option>
+                            <option value="paypal">PayPal</option>
+                            <option value="stripe">Stripe/Carta</option>
+                            <option value="altro">Altro</option>
+                        </select>
+                    </div>
+
+                    <div id="bankDetails" style="display: none;">
+                        <div class="form-group">
+                            <label>IBAN</label>
+                            <input type="text" id="iban" placeholder="IT00 X000 0000 0000 0000 0000 000" maxlength="32">
+                            <small style="color: var(--text-light); font-size: 0.75rem; display: block; margin-top: 0.25rem;">
+                                Formato: IT seguito da 25 caratteri
+                            </small>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Intestatario conto</label>
+                            <input type="text" id="accountHolder" placeholder="Nome Cognome o Ragione Sociale">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Banca (opzionale)</label>
+                            <input type="text" id="bankName" placeholder="es. Intesa Sanpaolo, UniCredit...">
+                        </div>
+                    </div>
+
+                    <div id="otherPaymentDetails" style="display: none;">
+                        <div class="form-group">
+                            <label>Dettagli pagamento</label>
+                            <input type="text" id="otherPaymentInfo" placeholder="Specifica il metodo di pagamento">
+                        </div>
+                    </div>
+
+                    <button type="button" class="btn btn-primary" id="generatePDF">
+                        <span>📄</span> Genera PDF
+                    </button>
+                </form>
+            </div>
+
+            <!-- Preview Section -->
+            <div class="card">
+                <div class="card-header">
+                    <h2><span class="icon">👁️</span> Anteprima Ricevuta</h2>
+                </div>
+                <div class="preview" id="preview">
+                    <div class="preview-header">
+                        <h3>RICEVUTA PER PRESTAZIONE OCCASIONALE</h3>
+                        <p class="receipt-number">N. <span id="previewReceiptNumber">---</span></p>
+                    </div>
+
+                    <div class="preview-section">
+                        <h4>Prestatore</h4>
+                        <div class="preview-field">
+                            <strong>Nome:</strong>
+                            <span id="previewSenderName">---</span>
+                        </div>
+                        <div class="preview-field">
+                            <strong>C.F.:</strong>
+                            <span id="previewSenderCF">---</span>
+                        </div>
+                        <div class="preview-field" id="previewSenderPIVAField" style="display: none;">
+                            <strong>P.IVA:</strong>
+                            <span id="previewSenderPIVA">---</span>
+                        </div>
+                        <div class="preview-field">
+                            <strong>Indirizzo:</strong>
+                            <span id="previewSenderAddress">---</span>
+                        </div>
+                    </div>
+
+                    <div class="preview-section">
+                        <h4>Cliente</h4>
+                        <div class="preview-field">
+                            <strong>Nome:</strong>
+                            <span id="previewRecipientName">---</span>
+                        </div>
+                        <div class="preview-field" id="previewRecipientCFField" style="display: none;">
+                            <strong>C.F.:</strong>
+                            <span id="previewRecipientCF">---</span>
+                        </div>
+                        <div class="preview-field">
+                            <strong>P.IVA:</strong>
+                            <span id="previewRecipientPIVA">---</span>
+                        </div>
+                        <div class="preview-field">
+                            <strong>Indirizzo:</strong>
+                            <span id="previewRecipientAddress">---</span>
+                        </div>
+                    </div>
+
+                    <div class="preview-section">
+                        <h4>Dettagli Prestazione</h4>
+                        <div class="preview-field">
+                            <strong>Data:</strong>
+                            <span id="previewDate">---</span>
+                        </div>
+                        <div class="preview-field" id="previewHoursField" style="display: none;">
+                            <strong>Ore lavorate:</strong>
+                            <span id="previewHours">---</span>
+                        </div>
+                        <div class="preview-field">
+                            <strong>Descrizione:</strong>
+                            <span id="previewDescription">---</span>
+                        </div>
+                    </div>
+
+                    <div class="preview-amount-box">
+                        <div class="preview-amount-row">
+                            <span>Compenso Lordo</span>
+                            <span id="previewAmountLordo">€ 0,00</span>
+                        </div>
+                        <div class="preview-amount-row">
+                            <span>Ritenuta d'Acconto (20%)</span>
+                            <span id="previewAmountRitenuta">€ 0,00</span>
+                        </div>
+                        <div class="preview-amount-row">
+                            <span>Netto a Pagare</span>
+                            <span id="previewAmountNetto">€ 0,00</span>
+                        </div>
+                    </div>
+
+                    <div class="preview-section" id="previewPaymentSection" style="display: none;">
+                        <h4>Modalità di Pagamento</h4>
+                        <div class="preview-field">
+                            <strong>Metodo:</strong>
+                            <span id="previewPaymentMethod">---</span>
+                        </div>
+                        <div id="previewBankDetailsSection" style="display: none;">
+                            <div class="preview-field">
+                                <strong>IBAN:</strong>
+                                <span id="previewIban" style="font-family: 'JetBrains Mono', monospace;">---</span>
+                            </div>
+                            <div class="preview-field">
+                                <strong>Intestatario:</strong>
+                                <span id="previewAccountHolder">---</span>
+                            </div>
+                            <div class="preview-field" id="previewBankNameField" style="display: none;">
+                                <strong>Banca:</strong>
+                                <span id="previewBankName">---</span>
+                            </div>
+                        </div>
+                        <div id="previewOtherPaymentSection" style="display: none;">
+                            <div class="preview-field">
+                                <strong>Dettagli:</strong>
+                                <span id="previewOtherPayment">---</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="legal-notes">
+                        <h4>Dichiarazioni e Note Legali</h4>
+                        <ul>
+                            <li>Il/La sottoscritto/a dichiara che la prestazione resa ha carattere del tutto occasionale, non svolgendo prestazione di lavoro autonomo con carattere di abitualità.</li>
+                            <li>Il/La sottoscritto/a dichiara di non aver fruito nell'anno, ai fini contributivi, della franchigia di €5.000,00 prevista dall'art. 44 del D.L. 30 settembre 2003, n. 269, convertito con modificazioni dalla L. 24 novembre 2003, n. 326.</li>
+                            <li>La presente prestazione non è soggetta ad IVA ai sensi dell'art. 5 del D.P.R. 633/1972.</li>
+                            <li>Le parti autorizzano il trattamento dei dati personali ai fini amministrativi e fiscali ai sensi del Reg. UE 679/2016 (GDPR).</li>
+                            <li id="stampTaxNote" style="display: none;">Imposta di bollo da €2,00 da applicarsi sull'originale ai sensi del D.P.R. 642/1972, art. 2 (importo superiore a €77,47).</li>
+                        </ul>
+                    </div>
+
+                    <div style="margin-top: 3rem; text-align: right;">
+                        <p><strong>Firma del Prestatore</strong></p>
+                        <div style="margin-top: 3rem; border-bottom: 1px solid var(--border); width: 200px; margin-left: auto;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <p><strong>Freelance Invoice</strong> by <a href="https://dfix.it" target="_blank">dfix.it</a></p>
+            <p style="margin-top: 0.5rem; font-size: 0.75rem;">Questo strumento è fornito a scopo informativo. Consulta un commercialista per questioni fiscali specifiche.</p>
+        </footer>
+    </div>
+
+    <script src="js/script.js"></script>
+</body>
+</html>

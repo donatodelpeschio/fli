@@ -1,0 +1,21 @@
+# IDE
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Docker
+*.log
+
+# Nginx
+*.pid
+
+#DOCKER
+docker-compose.yml
+Dockerfile
+nginx.conf
