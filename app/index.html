@@ -26,7 +26,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 
     <!-- jsPDF -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://unpkg.com/jspdf@4.2.0/dist/jspdf.umd.min.js"></script>
 
     <!-- Styles -->
     <link rel="stylesheet" href="css/style.css">
@@ -47,7 +47,7 @@
         <p>Generatore professionale di ricevute per prestazioni occasionali</p>
     </header>
 
-    <div class="main-grid">
+    <main class="main-grid">
         <!-- Form Section -->
         <div class="card">
             <div class="card-header">
@@ -106,7 +106,7 @@
                 </div>
 
                 <div class="form-group">
-                    <label>Data Prestazione</label>
+                    <label for="workDate">Data Prestazione</label>
                     <input type="date" id="workDate" required>
                 </div>
 
@@ -178,7 +178,7 @@
                 </div>
 
                 <div class="form-group">
-                    <label>Metodo di pagamento</label>
+                    <label for="paymentMethod">Metodo di pagamento</label>
                     <select id="paymentMethod" required>
                         <option value="">Seleziona...</option>
                         <option value="bonifico">Bonifico Bancario</option>
@@ -350,7 +350,7 @@
                 </div>
             </div>
         </div>
-    </div>
+    </main>
 
     <footer>
         <p><strong>Freelance Invoice</strong> by <a href="https://donatodelpeschio.it" target="_blank">donatodelpeschio.it</a></p>

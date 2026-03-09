@@ -1,7 +1,7 @@
 :root {
     --primary: #0f172a;
     --primary-light: #1e293b;
-    --accent: #3b82f6;
+    --accent: #1d65db;
     --accent-dark: #2563eb;
     --text: #0f172a;
     --text-light: #64748b;
@@ -161,6 +161,7 @@ textarea {
     background: var(--card);
     color: var(--accent);
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    font-weight: bold;
 }
 
 .amount-display {
