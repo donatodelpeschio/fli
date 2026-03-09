@@ -50,6 +50,10 @@ Prova subito il tool: **[fli.dfix.it](https://fli.dfix.it)**
 
 ---
 
+![screenshot.jpg](screenshot.jpg)
+
+---
+
 ## 📦 Installazione
 
 ### Uso Semplice

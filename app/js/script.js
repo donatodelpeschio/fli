@@ -498,7 +498,7 @@ generatePDFBtn.addEventListener('click', async () => {
     // Footer
     doc.setFontSize(8);
     doc.setTextColor(150, 150, 150);
-    doc.text('Generato con Freelance Invoice - dfix.it', 105, 285, { align: 'center' });
+    doc.text('Generato con Freelance Invoice - fli.dfix.it', 105, 285, { align: 'center' });
 
     // Save
     const fileName = `Ricevuta_${document.getElementById('receiptNumber').value.replace(/\//g, '-')}_${document.getElementById('recipientName').value.replace(/\s/g, '_')}.pdf`;
