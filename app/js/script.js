@@ -1,6 +1,13 @@
 // State
 let calculationMode = 'lordo'; // 'lordo' or 'netto'
 
+// Limits as per Italian law for occasional work
+const LIMITS = {
+    LORDO_MAX: 5000,
+    NETTO_MAX: 4000,
+    STAMP_TAX_THRESHOLD: 77.47
+};
+
 // Elements
 const form = document.getElementById('receiptForm');
 const amountInput = document.getElementById('amount');
@@ -92,8 +99,10 @@ toggleBtns.forEach(btn => {
 
         if (calculationMode === 'lordo') {
             amountLabel.textContent = 'Importo Lordo (€)';
+            amountInput.max = LIMITS.LORDO_MAX;
         } else {
             amountLabel.textContent = 'Importo Netto (€)';
+            amountInput.max = LIMITS.NETTO_MAX;
         }
 
         updateCalculations();
@@ -125,9 +134,45 @@ function calculateAmounts(inputValue) {
     }
 }
 
+// Check and display limit alerts
+function checkLimits(amounts) {
+    const limitAlert = document.getElementById('limitAlert');
+
+    if (amounts.lordo > LIMITS.LORDO_MAX) {
+        if (!limitAlert) {
+            // Create limit alert if it doesn't exist
+            const alert = document.createElement('div');
+            alert.id = 'limitAlert';
+            alert.className = 'limit-alert';
+            alert.innerHTML = `
+                <div class="limit-alert-icon">🚫</div>
+                <div class="limit-alert-content">
+                    <strong>Limite superato!</strong>
+                    <p>L'importo lordo supera €5.000,00, limite massimo per prestazioni occasionali.</p>
+                    <p style="font-size: 0.75rem; margin-top: 0.5rem;">Oltre questo limite è necessario aprire Partita IVA (art. 44 D.L. 269/2003).</p>
+                </div>
+            `;
+
+            // Insert after stamp alert
+            const stampAlert = document.getElementById('stampAlert');
+            stampAlert.parentNode.insertBefore(alert, stampAlert.nextSibling);
+        }
+        limitAlert.style.display = 'flex';
+        return false;
+    } else {
+        if (limitAlert) {
+            limitAlert.style.display = 'none';
+        }
+        return true;
+    }
+}
+
 // Update calculations and preview
 function updateCalculations() {
     const amounts = calculateAmounts(amountInput.value);
+
+    // Check limits
+    checkLimits(amounts);
 
     // Update display
     document.getElementById('displayLordo').textContent = formatCurrency(amounts.lordo);
@@ -142,7 +187,7 @@ function updateCalculations() {
     // Show/hide stamp tax alert and note
     const stampAlert = document.getElementById('stampAlert');
     const stampTaxNote = document.getElementById('stampTaxNote');
-    const requiresStamp = amounts.lordo > 77.47;
+    const requiresStamp = amounts.lordo > LIMITS.STAMP_TAX_THRESHOLD;
 
     if (requiresStamp) {
         stampAlert.style.display = 'flex';
@@ -272,7 +317,7 @@ function updatePreview() {
 // Event listeners
 amountInput.addEventListener('input', updateCalculations);
 
-form.querySelectorAll('input, textarea').forEach(input => {
+form.querySelectorAll('input, textarea, select').forEach(input => {
     input.addEventListener('input', updatePreview);
 });
 
@@ -294,10 +339,15 @@ generatePDFBtn.addEventListener('click', async () => {
         }
     }
 
+    // Check amount limits
+    const amounts = calculateAmounts(amountInput.value);
+    if (amounts.lordo > LIMITS.LORDO_MAX) {
+        alert(`Attenzione: l'importo lordo supera il limite di €${LIMITS.LORDO_MAX.toLocaleString('it-IT')} per prestazioni occasionali.\n\nOltre questo limite è necessario aprire Partita IVA secondo la normativa italiana (art. 44 D.L. 269/2003).`);
+        return;
+    }
+
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
-
-    const amounts = calculateAmounts(amountInput.value);
 
     // Title
     doc.setFontSize(18);
@@ -477,7 +527,7 @@ generatePDFBtn.addEventListener('click', async () => {
     ];
 
     // Add stamp tax note if required
-    if (amounts.lordo > 77.47) {
+    if (amounts.lordo > LIMITS.STAMP_TAX_THRESHOLD) {
         legalNotes.push('Imposta di bollo da €2,00 da applicarsi sull\'originale ai sensi del D.P.R. 642/1972, art. 2 (importo superiore a €77,47).');
     }
 
@@ -507,3 +557,60 @@ generatePDFBtn.addEventListener('click', async () => {
 
 // Initialize
 updatePreview();
+
+// PWA Install Prompt
+let deferredPrompt;
+
+window.addEventListener('beforeinstallprompt', (e) => {
+    // Prevent the mini-infobar from appearing on mobile
+    e.preventDefault();
+    // Stash the event so it can be triggered later
+    deferredPrompt = e;
+    // Show install prompt after 3 seconds
+    setTimeout(showInstallPrompt, 3000);
+});
+
+function showInstallPrompt() {
+    const promptDiv = document.createElement('div');
+    promptDiv.className = 'install-prompt';
+    promptDiv.innerHTML = `
+        <div class="install-prompt-content">
+            <p><strong>📲 Installa Freelance Invoice</strong></p>
+            <p style="font-size: 0.75rem; margin-top: 0.25rem;">Accedi velocemente anche offline!</p>
+        </div>
+        <button id="installBtn">Installa</button>
+        <button class="install-prompt-close" id="closePrompt">✕</button>
+    `;
+    document.body.appendChild(promptDiv);
+
+    setTimeout(() => {
+        promptDiv.classList.add('show');
+    }, 100);
+
+    document.getElementById('installBtn').addEventListener('click', async () => {
+        if (deferredPrompt) {
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            console.log(`User response: ${outcome}`);
+            deferredPrompt = null;
+            promptDiv.remove();
+        }
+    });
+
+    document.getElementById('closePrompt').addEventListener('click', () => {
+        promptDiv.remove();
+    });
+}
+
+// Register service worker
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+            .then(registration => {
+                console.log('Service Worker registered:', registration);
+            })
+            .catch(error => {
+                console.log('Service Worker registration failed:', error);
+            });
+    });
+}
